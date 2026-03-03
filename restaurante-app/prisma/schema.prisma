@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Restaurante {
+  id          Int      @id @default(autoincrement())
+  nombre      String
+  direccion   String
+  telefono    String?
+  creadoEn    DateTime @default(now())
+  menus       Menu[]
+  reservas    Reserva[]
+}
+
+model Menu {
+  id            Int         @id @default(autoincrement())
+  restauranteId Int
+  nombre        String
+  precio        Decimal
+  disponible    Boolean     @default(true)
+  creadoEn      DateTime    @default(now())
+
+  restaurante   Restaurante @relation(fields: [restauranteId], references: [id], onDelete: Cascade)
+}
+
+model Reserva {
+  id            Int         @id @default(autoincrement())
+  restauranteId Int
+  nombreCliente String
+  personas      Int
+  fechaHora     DateTime
+  notas         String?
+  creadoEn      DateTime    @default(now())
+
+  restaurante   Restaurante @relation(fields: [restauranteId], references: [id], onDelete: Cascade)
+
+  @@index([restauranteId, fechaHora])
+}
