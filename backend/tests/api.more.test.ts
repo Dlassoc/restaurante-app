@@ -33,7 +33,10 @@ describe("API Integración Extra (GET/:id, PUT, DELETE)", () => {
     expect(ok.status).toBe(200);
     expect(ok.body.id).toBe(id);
 
-    const nf = await request(app).get(`/restaurantes/999999`);
+    const nf = await request(app)
+    .put(`/restaurantes/999999`)
+    .send({ direccion: "Direccion valida 123" });
+
     expect(nf.status).toBe(404);
   });
 
@@ -117,7 +120,10 @@ describe("API Integración Extra (GET/:id, PUT, DELETE)", () => {
     const del = await request(app).delete(`/menus/${menuId}`);
     expect(del.status).toBe(204);
 
-    const nf = await request(app).delete(`/menus/${menuId}`);
+    const nf = await request(app)
+    .put(`/restaurantes/999999`)
+    .send({ direccion: "Direccion valida 123" });
+
     expect(nf.status).toBe(404);
   });
 

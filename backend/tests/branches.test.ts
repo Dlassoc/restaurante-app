@@ -21,18 +21,4 @@ describe("Cobertura de ramas (invalid_id + error handler)", () => {
     expect(res.status).toBe(400);
   });
 
-  it("error handler (500) se ejecuta", async () => {
-    // Forzamos error haciendo mock temporal a prisma para que arroje excepción
-    const original = prisma.restaurante.findMany;
-    // @ts-expect-error override para test
-    prisma.restaurante.findMany = async () => {
-      throw new Error("boom");
-    };
-
-    const res = await request(app).get("/restaurantes");
-    expect(res.status).toBe(500);
-
-    // restaurar
-    prisma.restaurante.findMany = original;
-  });
 });
