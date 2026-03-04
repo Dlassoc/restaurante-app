@@ -49,8 +49,7 @@ describe("API Integración (Restaurante -> Menu -> Reserva)", () => {
       .send({ nombre: "El Patio", direccion: "Cra 10 #20-30" });
 
     expect(r.status).toBe(201);
-    const restauranteId = r.body.id as number;
-
+    const restauranteId = Number(r.body.id);
     // 2) menú
     const m = await request(app)
       .post("/menus")
