@@ -11,10 +11,13 @@ const createSchema = z.object({
 });
 
 router.get("/", async (_req, res) => {
-  const data = await prisma.restaurante.findMany({
-    orderBy: { id: "asc" },
-  });
-  res.json(data);
+  try {
+    const data = await prisma.restaurante.findMany({ orderBy: { id: "asc" } });
+    res.json(data);
+  } catch (e) {
+    console.error("ERROR /restaurantes:", e);
+    res.status(500).json({ error: "internal_error" });
+  }
 });
 
 router.get("/:id", async (req, res) => {
