@@ -1,234 +1,177 @@
-# Restaurante App 🍽️ (DevOps / CI-CD)
-#prueba del hook
-Aplicación fullstack para gestión de **Restaurantes**, **Menús** y **Reservas**.
+# Restaurante App (DevOps)
 
-- **Backend:** Node.js + Express + TypeScript + Prisma
-- **Base de datos:** PostgreSQL (Docker)
-- **Frontend:** React + Vite + TypeScript
-- **CI:** GitHub Actions (tests + coverage gate)
+Aplicación full-stack para gestión de **Restaurantes, Menús y Reservas**, con **API REST**, base de datos **PostgreSQL**, **CI/CD** (staging y producción), y ejecución reproducible con **Docker Compose**.
 
----
+## Stack
+**Backend**
+- Node.js + TypeScript + Express
+- Prisma ORM
+- Zod (validación)
+- PostgreSQL
+- Jest + Supertest (tests + coverage)
 
-## 🚀 Funcionalidades
+**Frontend**
+- React + Vite
 
-### Backend (API REST)
-- CRUD de **Restaurantes**
-- CRUD de **Menús** (asociados a Restaurante)
-- CRUD de **Reservas** (asociadas a Restaurante)
-- Validaciones con **Zod**
-
-### Frontend (Web)
-- Formulario + listado de **Restaurantes**
-- Formulario + listado de **Menús** (con filtro por restaurante)
-- Formulario + listado de **Reservas** (con filtro por restaurante)
+**DevOps**
+- GitHub Actions (CI/CD)
+- Render (staging y producción)
+- Docker + Docker Compose
 
 ---
 
-## 🧱 Arquitectura del repositorio
+## Arquitectura y entidades
+- **Restaurantes**: datos base del restaurante.
+- **Menús**: pertenecen a un restaurante (FK `restauranteId`).
+- **Reservas**: pertenecen a un restaurante (FK `restauranteId`).
 
-```text
-.
-├─ backend/
-│  ├─ prisma/
-│  │  ├─ schema.prisma
-│  │  └─ migrations/
-│  ├─ src/
-│  ├─ routes/
-│  ├─ tests/
-│  ├─ package.json
-│  └─ tsconfig.json
-├─ frontend/
-│  ├─ src/
-│  ├─ package.json
-│  └─ vite.config.ts
-├─ docker-compose.yml
-└─ README.md
-✅ Requisitos
+---
 
-Node.js 20+
+## Endpoints principales (Backend)
+Base URL: `/`
+
+### Health
+- `GET /health` → `{ ok: true }`
+
+### Restaurantes
+- `GET /restaurantes`
+- `GET /restaurantes/:id`
+- `POST /restaurantes`
+- `PUT /restaurantes/:id`
+- `DELETE /restaurantes/:id`
+
+Validaciones:
+- `400 invalid_id` si `:id` no es numérico
+- `400` si body no cumple esquema (Zod)
+- `404 not_found` cuando no existe el recurso
+
+### Menús
+- `GET /menus`
+- `GET /menus/:id`
+- `POST /menus`
+- `PUT /menus/:id`
+- `DELETE /menus/:id`
+
+Reglas:
+- `POST/PUT` valida que `restauranteId` exista (`404 restaurante_not_found`)
+
+### Reservas
+- `GET /reservas`
+- `GET /reservas/:id`
+- `POST /reservas`
+- `PUT /reservas/:id`
+- `DELETE /reservas/:id`
+
+Reglas:
+- `POST/PUT` valida que `restauranteId` exista (`404 restaurante_not_found`)
+- `fechaHora` debe ser ISO (Zod `.datetime()`)
+
+---
+
+## Variables de entorno
+Backend:
+- `DATABASE_URL=postgresql://USER:PASS@HOST:PORT/DB?schema=public`
+- `PORT=3000` (opcional, por defecto 3000)
+
+Frontend:
+- `VITE_API_URL=http://localhost:3000` (para local/docker)
+
+Archivo sugerido:
+- `.env.example` (no subir `.env`)
+
+---
+
+## Ejecutar en local (sin Docker)
+
+### Backend
+```bash
+cd backend
+npm ci
+npx prisma generate
+# Para entorno local: aplicar migraciones (si aplica en tu setup)
+npx prisma migrate dev
+npm run dev
+Frontend
+cd frontend
+npm ci
+npm run dev
+Tests y cobertura
+
+En backend:
+
+cd backend
+npm run test
+npm run test:cov
+
+Quality gates:
+
+staging: coverage mínimo >= 60%
+
+producción: coverage mínimo >= 85%
+
+Ejecutar con Docker Compose (recomendado para demo)
+
+Requisitos:
 
 Docker + Docker Compose
 
-Git
+Arranque:
 
-En Windows se recomienda Docker Desktop con WSL2 habilitado.
+docker compose up --build
 
-🐘 Levantar PostgreSQL con Docker
+Verificar:
 
-Desde la raíz del repo:
+Backend: http://localhost:3000/health
 
-docker compose up -d
-docker ps
+Frontend: http://localhost:5173
 
-Esto levanta PostgreSQL en localhost:5432.
-
-🔧 Backend - instalación y ejecución
-1) Instalar dependencias
-cd backend
-npm install
-2) Configurar variables de entorno
-
-Crea el archivo backend/.env:
-
-DATABASE_URL=postgresql://app:app@localhost:5432/appdb?schema=public
-PORT=3000
-
-Ajusta el puerto si tu docker-compose.yml usa otro (ej. 5433:5432).
-
-3) Migraciones + Prisma Client
-npx prisma generate
-npx prisma migrate dev --name init
-4) Ejecutar backend en modo desarrollo
-npm run dev
-
-Backend disponible en:
-
-http://localhost:3000/health
-
-http://localhost:3000/restaurantes
-
-🎨 Frontend - instalación y ejecución
-1) Instalar dependencias
-cd frontend
-npm install
-2) Configurar variable de entorno
-
-Crea frontend/.env:
-
-VITE_API_URL=http://localhost:3000
-3) Ejecutar frontend
-npm run dev
-
-Frontend disponible en:
-
-http://localhost:5173
-
-🔌 Endpoints principales (API)
-Restaurantes
-
-GET /restaurantes
-
-GET /restaurantes/:id
-
-POST /restaurantes
-
-PUT /restaurantes/:id
-
-DELETE /restaurantes/:id
-
-Ejemplo POST /restaurantes:
-
-{
-  "nombre": "La 70",
-  "direccion": "Calle 70 #10-20",
-  "telefono": "3001234567"
-}
-Menús
-
-GET /menus
-
-GET /menus/:id
-
-POST /menus
-
-PUT /menus/:id
-
-DELETE /menus/:id
-
-Ejemplo POST /menus:
-
-{
-  "restauranteId": 1,
-  "nombre": "Menu Ejecutivo",
-  "precio": 25000,
-  "disponible": true
-}
-Reservas
-
-GET /reservas
-
-GET /reservas/:id
-
-POST /reservas
-
-PUT /reservas/:id
-
-DELETE /reservas/:id
-
-Ejemplo POST /reservas (fecha ISO 8601):
-
-{
-  "restauranteId": 1,
-  "nombreCliente": "Ana",
-  "personas": 2,
-  "fechaHora": "2026-03-04T19:30:00.000Z",
-  "notas": "Mesa cerca a la ventana"
-}
-🧪 Pruebas y cobertura
-
-En backend/:
-
-npm test
-npm run test:cov
-
-El reporte de cobertura queda en backend/coverage/.
-
-🤖 CI (GitHub Actions)
-
-El repositorio incluye un workflow de CI para backend que:
-
-instala dependencias
-
-levanta PostgreSQL como servicio
-
-ejecuta migraciones
-
-corre tests con coverage gate
-
-Workflow:
-
-.github/workflows/ci-backend-test.yml
-
-Rama objetivo típica:
-
-develop → ambiente de pruebas (coverage mínimo 60%)
-
-main → producción (coverage mínimo 85%) (pendiente al configurar CD)
-
-🌍 Ambientes (Test / Prod)
-
-Para cumplir separación de ambientes:
-
-URLs distintas: api-test vs api-prod / web-test vs web-prod
-
-BD distinta por ambiente (dos PostgreSQL distintos)
-
-Variables/Secrets separados por environment
-
-(Se completará al configurar el despliegue en Render/Railway/otro proveedor.)
-
-🧹 Apagar servicios Docker
-
-Desde la raíz:
+Apagar:
 
 docker compose down
+CI/CD (GitHub Actions)
 
-⚠️ Borrar datos (volúmenes):
+Workflows (en /.github/workflows/):
 
-docker compose down -v
-🧾 Evidencia (Git)
+CI Backend (Test): corre tests (y coverage) en Pull Requests.
 
-Commits con GitMoji
+Deploy Backend (Staging): se dispara con push a develop, corre tests y si pasa dispara deploy a staging (Render Deploy Hook).
 
-Trabajo en ramas:
+Deploy Backend (Production): se dispara con push a main, corre tests y si pasa dispara deploy a producción (Render Deploy Hook).
 
-develop (pruebas)
+Secrets (GitHub → Settings → Secrets and variables → Actions):
 
-main (producción)
+RENDER_STAGING_DEPLOY_HOOK_URL
 
-CI visible en GitHub Actions
+RENDER_PROD_DEPLOY_HOOK_URL
 
+Regla:
 
+Si falla tests/coverage, NO despliega (el hook corre solo al final si todo pasó).
 
-👤 Autor
-Daniel Lasso
+Ambientes (Render)
+
+Staging: conectado a rama develop y base de datos de staging.
+
+Producción: conectado a rama main y base de datos de producción (externa).
+
+En producción/staging se recomienda usar prisma migrate deploy en el Start Command o al arrancar el contenedor.
+
+Ramas y flujo recomendado
+
+develop → staging (pruebas)
+
+main → producción
+
+Flujo:
+
+Trabajar en feature branch
+
+PR a develop (CI corre y valida)
+
+Merge a develop (deploy staging)
+
+PR develop → main (deploy prod al merge)
+
+Autores
+
+Daniel Lasso (y equipo si aplica)
