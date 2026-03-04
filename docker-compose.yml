@@ -1,7 +1,6 @@
 services:
   db:
     image: postgres:16
-    container_name: restaurante_db
     environment:
       POSTGRES_USER: app
       POSTGRES_PASSWORD: app
@@ -10,29 +9,38 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d appdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
 
   backend:
     build:
       context: ./backend
     environment:
       PORT: 3000
-      # OJO: dentro de docker, el host es el nombre del servicio "db"
       DATABASE_URL: postgresql://app:app@db:5432/appdb?schema=public
+      NODE_ENV: production
     ports:
       - "3000:3000"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    restart: unless-stopped
 
   frontend:
     build:
       context: ./frontend
     environment:
-      # Dentro de docker, el backend se alcanza por el nombre del servicio "backend"
       VITE_API_URL: http://backend:3000
     ports:
       - "5173:5173"
     depends_on:
-      - backend
+      backend:
+        condition: service_started
+    restart: unless-stopped
 
 volumes:
   pgdata:
