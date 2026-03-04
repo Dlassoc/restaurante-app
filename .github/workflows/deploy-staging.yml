@@ -1,3 +1,4 @@
+# .github/workflows/deploy-staging.yml
 name: Deploy Backend (Staging)
 
 on:
@@ -33,22 +34,24 @@ jobs:
       NPM_CONFIG_PRODUCTION: "false"
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: "npm"
           cache-dependency-path: backend/package-lock.json
 
-      - name: Install deps
+      - name: Install deps (with dev)
         run: npm ci --include=dev
 
       - name: Prisma generate
-        run: ./node_modules/.bin/prisma generate
+        run: npx prisma generate
 
-      - name: Migrate DB
-        run: ./node_modules/.bin/prisma migrate dev --name ci_init
+      - name: Sync DB schema (CI)
+        run: npx prisma db push
 
       - name: Test + Coverage Gate (60%)
         run: npm run test:cov -- --coverageThreshold='{"global":{"branches":60,"functions":60,"lines":60,"statements":60}}'
@@ -56,4 +59,9 @@ jobs:
       - name: Trigger Render Deploy (Staging)
         env:
           DEPLOY_HOOK_URL: ${{ secrets.RENDER_STAGING_DEPLOY_HOOK_URL }}
-        run: curl -fsS "$DEPLOY_HOOK_URL"
+        run: |
+          if [ -z "$DEPLOY_HOOK_URL" ]; then
+            echo "Missing secret: RENDER_STAGING_DEPLOY_HOOK_URL"
+            exit 1
+          fi
+          curl -fsS "$DEPLOY_HOOK_URL"

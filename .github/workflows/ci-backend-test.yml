@@ -1,8 +1,7 @@
+# .github/workflows/ci-backend-test.yml
 name: CI Backend (Test)
 
 on:
-  push:
-    branches: ["develop"]
   pull_request:
 
 jobs:
@@ -49,8 +48,8 @@ jobs:
       - name: Prisma generate
         run: npx prisma generate
 
-      - name: Migrate DB
-        run: npx prisma migrate dev --name ci_init
+      - name: Sync DB schema (CI)
+        run: npx prisma db push
 
       - name: Test + Coverage Gate (60%)
         run: npm run test:cov -- --coverageThreshold='{"global":{"branches":60,"functions":60,"lines":60,"statements":60}}'
