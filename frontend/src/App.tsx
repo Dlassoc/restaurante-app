@@ -1,78 +1,105 @@
 import { useEffect, useState } from "react";
 import { apiGet, apiPost } from "./lib/api";
-import type { Restaurante } from "./types";
+
+type Restaurante = {
+  id: number;
+  nombre: string;
+  direccion: string;
+  telefono?: string | null;
+};
 
 export default function App() {
-  const [items, setItems] = useState<Restaurante[]>([]);
+  const [restaurantes, setRestaurantes] = useState<Restaurante[]>([]);
   const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const [nombre, setNombre] = useState("");
   const [direccion, setDireccion] = useState("");
   const [telefono, setTelefono] = useState("");
 
-  async function load() {
+  async function cargar() {
     setLoading(true);
-    setErr(null);
+    setError(null);
     try {
       const data = await apiGet<Restaurante[]>("/restaurantes");
-      setItems(data);
+      setRestaurantes(data);
     } catch (e: any) {
-      setErr(e?.message ?? "error");
+      setError(e?.message ?? "Error cargando restaurantes");
     } finally {
       setLoading(false);
     }
   }
 
-  async function createRestaurante(e: React.FormEvent) {
+  async function crearRestaurante(e: React.FormEvent) {
     e.preventDefault();
-    setErr(null);
+    setError(null);
+
+    if (nombre.trim().length < 2) return setError("Nombre muy corto");
+    if (direccion.trim().length < 5) return setError("Dirección muy corta");
+
     try {
       await apiPost<Restaurante>("/restaurantes", {
-        nombre,
-        direccion,
-        telefono: telefono || undefined,
+        nombre: nombre.trim(),
+        direccion: direccion.trim(),
+        telefono: telefono.trim() ? telefono.trim() : undefined,
       });
       setNombre("");
       setDireccion("");
       setTelefono("");
-      await load();
+      await cargar();
     } catch (e: any) {
-      setErr(e?.message ?? "error");
+      setError(e?.message ?? "Error creando restaurante");
     }
   }
 
   useEffect(() => {
-    load();
+    cargar();
   }, []);
 
   return (
     <div style={{ maxWidth: 900, margin: "0 auto", padding: 24, fontFamily: "system-ui" }}>
-      <h1>Restaurante App</h1>
-
-      <p style={{ opacity: 0.8 }}>
-        Backend: <code>{import.meta.env.VITE_API_URL ?? "http://localhost:3000"}</code>
+      <h1>Restaurantes</h1>
+      <p style={{ opacity: 0.75 }}>
+        API: <code>{import.meta.env.VITE_API_URL ?? "http://localhost:3000"}</code>
       </p>
 
-      {err && <div style={{ padding: 12, background: "#fee", border: "1px solid #f99" }}>{err}</div>}
+      {error && (
+        <div style={{ padding: 12, background: "#fee", border: "1px solid #f99", borderRadius: 8 }}>
+          {error}
+        </div>
+      )}
 
-      <section style={{ marginTop: 24 }}>
+      <section style={{ marginTop: 20 }}>
         <h2>Crear restaurante</h2>
-        <form onSubmit={createRestaurante} style={{ display: "grid", gap: 8 }}>
-          <input placeholder="Nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} />
-          <input placeholder="Dirección" value={direccion} onChange={(e) => setDireccion(e.target.value)} />
-          <input placeholder="Teléfono (opcional)" value={telefono} onChange={(e) => setTelefono(e.target.value)} />
+        <form onSubmit={crearRestaurante} style={{ display: "grid", gap: 10 }}>
+          <input
+            placeholder="Nombre"
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+          />
+          <input
+            placeholder="Dirección"
+            value={direccion}
+            onChange={(e) => setDireccion(e.target.value)}
+          />
+          <input
+            placeholder="Teléfono (opcional)"
+            value={telefono}
+            onChange={(e) => setTelefono(e.target.value)}
+          />
           <button type="submit">Crear</button>
         </form>
       </section>
 
-      <section style={{ marginTop: 24 }}>
-        <h2>Restaurantes</h2>
+      <section style={{ marginTop: 28 }}>
+        <h2>Listado</h2>
         {loading ? (
           <p>Cargando...</p>
+        ) : restaurantes.length === 0 ? (
+          <p>No hay restaurantes aún.</p>
         ) : (
           <ul>
-            {items.map((r) => (
+            {restaurantes.map((r) => (
               <li key={r.id}>
                 <b>{r.nombre}</b> — {r.direccion} {r.telefono ? `(${r.telefono})` : ""}
               </li>
