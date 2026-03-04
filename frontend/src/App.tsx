@@ -1,4 +1,5 @@
 import Menus from "./components/menus";
+import Reservas from "./components/reservas";
 import Restaurantes from "./components/restaurantes";
 export default function App() {
   return (
@@ -10,6 +11,7 @@ export default function App() {
 
       <Restaurantes />
       <Menus />
+      <Reservas />
     </div>
   );
 }
