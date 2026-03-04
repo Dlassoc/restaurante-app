@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { apiGet, apiPost } from "./lib/api";
+import Menus from "./components/menus";
 
 type Restaurante = {
   id: number;
@@ -106,6 +107,9 @@ export default function App() {
             ))}
           </ul>
         )}
+      </section>
+      <section style={{ marginTop: 28 }}>
+        <Menus />
       </section>
     </div>
   );
