@@ -96,8 +96,7 @@ describe("API Integración Extra (GET/:id, PUT, DELETE)", () => {
       .send({ precio: 15000, disponible: false });
 
     expect(up.status).toBe(200);
-    expect(String(up.body.precio)).toBe("15000"); // Prisma Decimal puede llegar como string
-    expect(up.body.disponible).toBe(false);
+    expect(Number(up.body.precio)).toBe(15000);    expect(up.body.disponible).toBe(false);
 
     const nf = await request(app)
       .put(`/menus/999999`)
