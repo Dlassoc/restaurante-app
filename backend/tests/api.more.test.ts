@@ -33,10 +33,7 @@ describe("API Integración Extra (GET/:id, PUT, DELETE)", () => {
     expect(ok.status).toBe(200);
     expect(ok.body.id).toBe(id);
 
-    const nf = await request(app)
-    .put(`/restaurantes/999999`)
-    .send({ direccion: "Direccion valida 123" });
-
+    const nf = await request(app).get(`/restaurantes/999999`);
     expect(nf.status).toBe(404);
   });
 
@@ -50,9 +47,10 @@ describe("API Integración Extra (GET/:id, PUT, DELETE)", () => {
     expect(up.status).toBe(200);
     expect(up.body.direccion).toBe("Nueva direccion 123");
 
+    // Para probar 404 (not_found) el body debe ser válido (si no, es 400 por validación)
     const nf = await request(app)
       .put(`/restaurantes/999999`)
-      .send({ direccion: "X" });
+      .send({ direccion: "Direccion valida 123" });
 
     expect(nf.status).toBe(404);
   });
@@ -65,6 +63,14 @@ describe("API Integración Extra (GET/:id, PUT, DELETE)", () => {
 
     const nf = await request(app).delete(`/restaurantes/${id}`);
     expect(nf.status).toBe(404);
+  });
+
+  it("Restaurantes: GET / (500 cuando prisma falla) [cubre catch y console.error]", async () => {
+    jest.spyOn(prisma.restaurante, "findMany").mockRejectedValueOnce(new Error("boom"));
+
+    const r = await request(app).get("/restaurantes");
+    expect(r.status).toBe(500);
+    expect(r.body).toEqual({ error: "internal_error" });
   });
 
   it("Menus: GET /:id (ok) y 404", async () => {
@@ -99,7 +105,8 @@ describe("API Integración Extra (GET/:id, PUT, DELETE)", () => {
       .send({ precio: 15000, disponible: false });
 
     expect(up.status).toBe(200);
-    expect(Number(up.body.precio)).toBe(15000);    expect(up.body.disponible).toBe(false);
+    expect(Number(up.body.precio)).toBe(15000);
+    expect(up.body.disponible).toBe(false);
 
     const nf = await request(app)
       .put(`/menus/999999`)
@@ -120,10 +127,7 @@ describe("API Integración Extra (GET/:id, PUT, DELETE)", () => {
     const del = await request(app).delete(`/menus/${menuId}`);
     expect(del.status).toBe(204);
 
-    const nf = await request(app)
-    .put(`/restaurantes/999999`)
-    .send({ direccion: "Direccion valida 123" });
-
+    const nf = await request(app).delete(`/menus/${menuId}`);
     expect(nf.status).toBe(404);
   });
 
@@ -194,7 +198,7 @@ describe("API Integración Extra (GET/:id, PUT, DELETE)", () => {
     const fechaIso = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
     const created = await request(app)
       .post("/reservas")
-      .send({ restauranteId, nombreCliente: "Juan", personas: 2, fechaHora: fechaIso });
+      .send({ restauranteId, nombreCliente: "Juan", personas: 2, fechaHora:      fechaIso });
 
     const reservaId = Number(created.body.id);
 
@@ -204,4 +208,27 @@ describe("API Integración Extra (GET/:id, PUT, DELETE)", () => {
 
     expect(bad.status).toBe(400);
   });
+
+  it("Menus: PUT /:id devuelve 404 cuando no existe (cubre catch)", async () => {
+  const restauranteId = await seedRestaurante();
+
+  // body válido para evitar 400 por validación
+  const nf = await request(app)
+    .put("/menus/999999")
+    .send({ restauranteId, nombre: "Menu valido", precio: 10000, disponible: true });
+
+  expect(nf.status).toBe(404);
+});
+
+it("Reservas: PUT /:id devuelve 404 cuando no existe (cubre catch)", async () => {
+  const restauranteId = await seedRestaurante();
+
+  const fechaIso = new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString();
+  const nf = await request(app)
+    .put("/reservas/999999")
+    .send({ restauranteId, nombreCliente: "Valido", personas: 2, fechaHora: fechaIso });
+
+  expect(nf.status).toBe(404);
+});
+
 });
