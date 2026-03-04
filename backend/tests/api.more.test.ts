@@ -65,13 +65,19 @@ describe("API Integración Extra (GET/:id, PUT, DELETE)", () => {
     expect(nf.status).toBe(404);
   });
 
-  it("Restaurantes: GET / (500 cuando prisma falla) [cubre catch y console.error]", async () => {
-    jest.spyOn(prisma.restaurante, "findMany").mockRejectedValueOnce(new Error("boom"));
+    it("Restaurantes: GET / (500 cuando prisma falla) [cubre catch sin ensuciar consola]", async () => {
+    const errSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    const prismaSpy = jest
+        .spyOn(prisma.restaurante, "findMany")
+        .mockRejectedValueOnce(new Error("boom"));
 
     const r = await request(app).get("/restaurantes");
     expect(r.status).toBe(500);
     expect(r.body).toEqual({ error: "internal_error" });
-  });
+
+    prismaSpy.mockRestore();
+    errSpy.mockRestore();
+    });
 
   it("Menus: GET /:id (ok) y 404", async () => {
     const restauranteId = await seedRestaurante();
