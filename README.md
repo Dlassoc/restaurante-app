@@ -1,5 +1,5 @@
 # Restaurante App 🍽️ (DevOps / CI-CD)
-
+#prueba del hook
 Aplicación fullstack para gestión de **Restaurantes**, **Menús** y **Reservas**.
 
 - **Backend:** Node.js + Express + TypeScript + Prisma
