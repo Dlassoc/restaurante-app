@@ -54,7 +54,7 @@ jobs:
         run: npx prisma db push
 
       - name: Test + Coverage Gate (85%)
-        run: npm run test:cov -- --coverageThreshold='{"global":{"branches":85,"functions":85,"lines":85,"statements":85}}'
+        run: npm run test:cov -- --coverageThreshold='{"global":{"branches":99,"functions":99,"lines":99,"statements":99}}'
 
       - name: Trigger Render Deploy (Production)
         env:
