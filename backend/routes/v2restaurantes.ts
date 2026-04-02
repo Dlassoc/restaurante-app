@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { prisma } from "./../src/prisma";
+import { prisma } from "../src/prisma";
 import { z } from "zod";
 
 const router = Router();
@@ -15,7 +15,7 @@ router.get("/", async (_req, res) => {
     const data = await prisma.restaurante.findMany({ orderBy: { id: "asc" } });
     res.json(data);
   } catch (e) {
-    console.error("ERROR /restaurantes:", e);
+    console.error("ERROR /v2/restaurantes:", e);
     res.status(500).json({ error: "internal_error" });
   }
 });
