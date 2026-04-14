@@ -13,6 +13,7 @@ RUN npm run build
 FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
+ENV PORT=8080
 
 COPY package*.json ./
 COPY prisma ./prisma
@@ -20,6 +21,6 @@ RUN npm ci --omit=dev
 
 COPY --from=build /app/dist ./dist
 
-EXPOSE 3000
+EXPOSE 8080
 
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/server.js"]
+CMD ["node", "dist/src/server.js"]
