@@ -10,6 +10,10 @@ const createSchema = z.object({
   telefono: z.string().min(3).optional(),
 });
 
+const updateSchema = createSchema
+  .partial()
+  .refine((data) => Object.keys(data).length > 0, { message: "empty_body" });
+
 router.get("/", async (_req, res) => {
   try {
     const data = await prisma.restaurante.findMany({ orderBy: { id: "asc" } });
@@ -38,11 +42,11 @@ router.post("/", async (req, res) => {
   res.status(201).json(created);
 });
 
-router.put("/:id", async (req, res) => {
+const updateRestaurante = async (req: any, res: any) => {
   const id = Number(req.params.id);
   if (Number.isNaN(id)) return res.status(400).json({ error: "invalid_id" });
 
-  const parsed = createSchema.partial().safeParse(req.body);
+  const parsed = updateSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json(parsed.error.flatten());
 
   try {
@@ -54,7 +58,10 @@ router.put("/:id", async (req, res) => {
   } catch {
     res.status(404).json({ error: "not_found" });
   }
-});
+};
+
+router.put("/:id", updateRestaurante);
+router.patch("/:id", updateRestaurante);
 
 router.delete("/:id", async (req, res) => {
   const id = Number(req.params.id);

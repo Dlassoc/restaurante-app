@@ -1,177 +1,167 @@
 # Restaurante App (DevOps)
 
-Aplicación full-stack para gestión de **Restaurantes, Menús y Reservas**, con **API REST**, base de datos **PostgreSQL**, **CI/CD** (staging y producción), y ejecución reproducible con **Docker Compose**.
+Aplicacion full-stack para gestion de Restaurantes, Menus y Reservas, con API REST, PostgreSQL, CI/CD y ejecucion reproducible con Docker Compose.
 
 ## Stack
-**Backend**
+Backend:
 - Node.js + TypeScript + Express
 - Prisma ORM
-- Zod (validación)
+- Zod
 - PostgreSQL
-- Jest + Supertest (tests + coverage)
+- Jest + Supertest
 
-**Frontend**
+Frontend:
 - React + Vite
 
-**DevOps**
-- GitHub Actions (CI/CD)
-- Render (staging y producción)
+DevOps:
+- GitHub Actions
+- Render
 - Docker + Docker Compose
 
----
+## API V2
+Base URL oficial: `/api/v2`
 
-## Arquitectura y entidades
-- **Restaurantes**: datos base del restaurante.
-- **Menús**: pertenecen a un restaurante (FK `restauranteId`).
-- **Reservas**: pertenecen a un restaurante (FK `restauranteId`).
+Health:
+- `GET /api/v2/health` -> `{ "ok": true, "version": "v2" }`
+- `GET /api/v2/health/db` -> `{ "ok": true, "db": "up" }`
 
----
+Restaurantes:
+- `GET /api/v2/restaurantes`
+- `GET /api/v2/restaurantes/:id`
+- `POST /api/v2/restaurantes`
+- `PUT /api/v2/restaurantes/:id`
+- `PATCH /api/v2/restaurantes/:id`
+- `DELETE /api/v2/restaurantes/:id`
 
-## Endpoints principales (Backend)
-Base URL: `/`
+Menus:
+- `GET /api/v2/menus`
+- `GET /api/v2/menus/:id`
+- `POST /api/v2/menus`
+- `PUT /api/v2/menus/:id`
+- `PATCH /api/v2/menus/:id`
+- `DELETE /api/v2/menus/:id`
 
-### Health
-- `GET /health` → `{ ok: true }`
+Reservas:
+- `GET /api/v2/reservas`
+- `GET /api/v2/reservas/:id`
+- `POST /api/v2/reservas`
+- `PUT /api/v2/reservas/:id`
+- `PATCH /api/v2/reservas/:id`
+- `DELETE /api/v2/reservas/:id`
 
-### Restaurantes
-- `GET /restaurantes`
-- `GET /restaurantes/:id`
-- `POST /restaurantes`
-- `PUT /restaurantes/:id`
-- `DELETE /restaurantes/:id`
+## Payloads de ejemplo
+Crear restaurante (`POST /api/v2/restaurantes`):
 
-Validaciones:
-- `400 invalid_id` si `:id` no es numérico
-- `400` si body no cumple esquema (Zod)
-- `404 not_found` cuando no existe el recurso
+```json
+{
+	"nombre": "La 70",
+	"direccion": "Calle 70 #10-20",
+	"telefono": "3001234567"
+}
+```
 
-### Menús
-- `GET /menus`
-- `GET /menus/:id`
-- `POST /menus`
-- `PUT /menus/:id`
-- `DELETE /menus/:id`
+Actualizar restaurante parcial (`PATCH /api/v2/restaurantes/:id`):
 
-Reglas:
-- `POST/PUT` valida que `restauranteId` exista (`404 restaurante_not_found`)
+```json
+{
+	"telefono": "3109998877"
+}
+```
 
-### Reservas
-- `GET /reservas`
-- `GET /reservas/:id`
-- `POST /reservas`
-- `PUT /reservas/:id`
-- `DELETE /reservas/:id`
+Crear menu (`POST /api/v2/menus`):
 
-Reglas:
-- `POST/PUT` valida que `restauranteId` exista (`404 restaurante_not_found`)
-- `fechaHora` debe ser ISO (Zod `.datetime()`)
+```json
+{
+	"restauranteId": 1,
+	"nombre": "Menu Ejecutivo",
+	"precio": 25000,
+	"disponible": true
+}
+```
 
----
+Actualizar menu parcial (`PATCH /api/v2/menus/:id`):
+
+```json
+{
+	"precio": 28000,
+	"disponible": false
+}
+```
+
+Crear reserva (`POST /api/v2/reservas`):
+
+```json
+{
+	"restauranteId": 1,
+	"nombreCliente": "Ana",
+	"personas": 2,
+	"fechaHora": "2026-04-14T19:30:00.000Z",
+	"notas": "Mesa cerca de la ventana"
+}
+```
+
+Actualizar reserva parcial (`PATCH /api/v2/reservas/:id`):
+
+```json
+{
+	"personas": 4,
+	"notas": "Cumpleanos"
+}
+```
+
+## Reglas y respuestas
+- `400 invalid_id` cuando `:id` no es numerico.
+- `400` cuando el body no cumple el esquema Zod o llega vacio en `PUT/PATCH`.
+- `404 not_found` cuando no existe el recurso.
+- `404 restaurante_not_found` cuando `restauranteId` no existe.
 
 ## Variables de entorno
 Backend:
 - `DATABASE_URL=postgresql://USER:PASS@HOST:PORT/DB?schema=public`
-- `PORT=3000` (opcional, por defecto 3000)
+- `PORT=3000`
 
 Frontend:
-- `VITE_API_URL=http://localhost:3000` (para local/docker)
+- `VITE_API_URL=http://localhost:3000/api/v2`
 
-Archivo sugerido:
-- `.env.example` (no subir `.env`)
+## Ejecutar en local
+Backend:
 
----
-
-## Ejecutar en local (sin Docker)
-
-### Backend
 ```bash
 cd backend
 npm ci
 npx prisma generate
-# Para entorno local: aplicar migraciones (si aplica en tu setup)
 npx prisma migrate dev
 npm run dev
-Frontend
+```
+
+Frontend:
+
+```bash
 cd frontend
 npm ci
 npm run dev
-Tests y cobertura
+```
 
-En backend:
+Tests:
 
+```bash
 cd backend
 npm run test
 npm run test:cov
+```
 
-Quality gates:
+## Docker Compose
 
-staging: coverage mínimo >= 60%
-
-producción: coverage mínimo >= 85%
-
-Ejecutar con Docker Compose (recomendado para demo)
-
-Requisitos:
-
-Docker + Docker Compose
-
-Arranque:
-
+```bash
 docker compose up --build
+```
 
 Verificar:
-
-Backend: http://localhost:3000/health
-
-Frontend: http://localhost:5173
+- Backend: `http://localhost:3000/api/v2/health`
+- Frontend: `http://localhost:5173`
 
 Apagar:
 
+```bash
 docker compose down
-CI/CD (GitHub Actions)
-
-Workflows (en /.github/workflows/):
-
-CI Backend (Test): corre tests (y coverage) en Pull Requests.
-
-Deploy Backend (Staging): se dispara con push a develop, corre tests y si pasa dispara deploy a staging (Render Deploy Hook).
-
-Deploy Backend (Production): se dispara con push a main, corre tests y si pasa dispara deploy a producción (Render Deploy Hook).
-
-Secrets (GitHub → Settings → Secrets and variables → Actions):
-
-RENDER_STAGING_DEPLOY_HOOK_URL
-
-RENDER_PROD_DEPLOY_HOOK_URL
-
-Regla:
-
-Si falla tests/coverage, NO despliega (el hook corre solo al final si todo pasó).
-
-Ambientes (Render)
-
-Staging: conectado a rama develop y base de datos de staging.
-
-Producción: conectado a rama main y base de datos de producción (externa).
-
-En producción/staging se recomienda usar prisma migrate deploy en el Start Command o al arrancar el contenedor.
-
-Ramas y flujo recomendado
-
-develop → staging (pruebas)
-
-main → producción
-
-Flujo:
-
-Trabajar en feature branch
-
-PR a develop (CI corre y valida)
-
-Merge a develop (deploy staging)
-
-PR develop → main (deploy prod al merge)
-
-Autores
-
-Daniel Lasso (y equipo si aplica)
+```
