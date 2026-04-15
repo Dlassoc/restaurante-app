@@ -3,6 +3,9 @@ import { prisma } from "./../src/prisma";
 import { z } from "zod";
 
 const router = Router();
+const RESTAURANTES_WEBHOOK_URL =
+  process.env.RESTAURANTES_WEBHOOK_URL ??
+  "https://handle-request-315329759921.us-east1.run.app/";
 
 const createSchema = z.object({
   nombre: z.string().min(2),
@@ -39,6 +42,25 @@ router.post("/", async (req, res) => {
   if (!parsed.success) return res.status(400).json(parsed.error.flatten());
 
   const created = await prisma.restaurante.create({ data: parsed.data });
+
+  try {
+    const webhookResponse = await fetch(RESTAURANTES_WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(created),
+    });
+
+    if (!webhookResponse.ok) {
+      return res.status(502).json({
+        error: "webhook_failed",
+        webhookStatus: webhookResponse.status,
+      });
+    }
+  } catch (error) {
+    console.error("ERROR webhook /restaurantes:", error);
+    return res.status(502).json({ error: "webhook_failed" });
+  }
+
   res.status(201).json(created);
 });
 
