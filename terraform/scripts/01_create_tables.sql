@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS demo_restaurantes (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    direccion VARCHAR(150) NOT NULL,
+    telefono VARCHAR(30),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
